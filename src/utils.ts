@@ -6,7 +6,10 @@ export function createAnimation(
    keyframes: Keyframe[] | PropertyIndexedKeyframes = [],
    options: KeyframeAnimationOptions = {}
 ) {
-   return new Animation(new KeyframeEffect(ref.current, keyframes, options), document.timeline)
+   return new Animation(
+      new KeyframeEffect(ref.current, keyframes, options),
+      document.timeline
+   )
 }
 
 export function useOnFirstMount(_callback: () => void) {
@@ -38,10 +41,20 @@ export function mergeTranslate(x: number, y: number, transform: string) {
    return transform
 }
 
-export function mergeTransform(_keyframes: AnimationRef['keyframes'], x: number, y: number) {
+export function mergeTransform(
+   _keyframes: AnimationRef['keyframes'],
+   x: number,
+   y: number
+) {
    if (Array.isArray(_keyframes)) {
       const keyframes = [..._keyframes]
-      keyframes[0].transform = mergeTranslate(x, y, `${keyframes[0].transform ?? ''}`)
+
+      if ('transform' in keyframes[0]) {
+         keyframes[0].transform = mergeTranslate(x, y, `${keyframes[0].transform ?? ''}`)
+      } else {
+         keyframes.unshift({ transform: mergeTranslate(x, y, '') })
+         keyframes.push({ transform: 'translateX(0) translateY(0)' })
+      }
 
       return keyframes
    }
@@ -52,7 +65,7 @@ export function mergeTransform(_keyframes: AnimationRef['keyframes'], x: number,
       if (Array.isArray(keyframes.transform)) {
          keyframes.transform[0] = mergeTranslate(x, y, `${keyframes.transform[0] ?? ''}`)
       } else if (!('transform' in _keyframes)) {
-         keyframes.transform = [mergeTranslate(x, y, '')]
+         keyframes.transform = [mergeTranslate(x, y, ''), 'translateX(0) translateY(0)']
       }
 
       return keyframes
@@ -71,7 +84,7 @@ export const defaultProps: Required<InternalProps & Props> = {
    hide: false,
    keep: false,
    durIn: 600,
-   durOut: 400,
+   durOut: 500,
    delayIn: 0,
    delayOut: 0,
    startY: 0,

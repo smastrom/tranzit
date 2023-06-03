@@ -5,7 +5,6 @@
 
    color-scheme: light dark;
    color: rgba(255, 255, 255, 0.87);
-   background-color: #242424;
 
    font-synthesis: none;
    text-rendering: optimizeLegibility;
@@ -14,11 +13,37 @@
    -webkit-text-size-adjust: 100%;
 }
 
-body {
+* {
+   box-sizing: border-box;
+}
+
+html,
+body,
+h1 {
    margin: 0;
+   padding: 0;
+}
+
+body {
+   background-color: #0e0c10;
    display: flex;
    justify-content: center;
    align-items: center;
    min-width: 320px;
    min-height: 100vh;
+}
+
+#root {
+   padding: 2rem 1rem;
+   width: 1200px;
+   max-width: 100%;
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(325px, 1fr));
+   column-gap: 3rem;
+   row-gap: 6rem;
+}
+
+button:hover {
+   border: 1px solid #b34fff !important;
+   color: white !important;
 }

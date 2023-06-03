@@ -6,10 +6,12 @@ import {
    useEffect,
    useLayoutEffect,
    useCallback,
-   type ReactElement
+   type ReactElement,
+   createElement,
+   useMemo
 } from 'react'
 import { createAnimation, useOnFirstMount, mergeTransform, defaultProps } from './utils'
-import type { InternalProps, Props, MRef } from './types'
+import type { InternalProps, Props } from './types'
 
 export function Tranzit(
    tranzitProps: InternalProps & Props = defaultProps
@@ -22,6 +24,12 @@ export function Tranzit(
 
    const [isDestroyed, setIsDestroyed] = useState(false)
 
+   const keyframes = useMemo(
+      () => mergeTransform(props.keyframes, props.startX, props.startY),
+      [props.keyframes, props.startX, props.startY]
+   )
+
+   // Called on first mount and on leave animation finish
    const initialize = useCallback(() => {
       if (!internalRef.current) return
 
@@ -34,31 +42,31 @@ export function Tranzit(
       setIsDestroyed(true)
    }, [props.hide, props.keep])
 
-   const isMounted = useOnFirstMount(() => {
+   const isInitialized = useOnFirstMount(() => {
       if (props.when) {
+         // Play animation on mount
          if (props.initial) {
-            animation.current = createAnimation(
-               internalRef,
-               mergeTransform(props.keyframes, props.startX, props.startY),
-               {
-                  ...props.keyframeOptions,
-                  duration: props.durIn,
-                  delay: props.delayIn
-               }
-            )
-
+            animation.current = createAnimation(internalRef, keyframes, {
+               ...props.keyframeOptions,
+               duration: props.durIn,
+               delay: props.delayIn
+            })
             animation.current.play()
          }
       } else {
+         // Hide/unmount child
          initialize()
       }
    })
 
+   // Handles 'when' change to true, called before paint
    useLayoutEffect(() => {
-      if (isMounted && props.when) {
+      if (isInitialized && props.when) {
          if (!internalRef.current) {
+            // Not using keep/hide, was unmounted on initialization/onFinish -> mount child
             setIsDestroyed(false)
          } else {
+            // Restore visibility/display, keep has priority over hide
             if (props.keep)
                return internalRef.current.style.setProperty(
                   'visibility',
@@ -71,11 +79,12 @@ export function Tranzit(
                )
          }
       }
-   }, [isMounted, props.when, props.hide, props.keep])
+   }, [isInitialized, props.when, props.hide, props.keep])
 
+   // Handles animations, runs after paint, only if 'child' is mounted
    useEffect(() => {
       if (isDestroyed) return
-      if (isMounted) {
+      if (isInitialized) {
          if (props.when) {
             if (animation.current.playState === 'running') {
                animation.current.onfinish = null
@@ -87,11 +96,12 @@ export function Tranzit(
                animation.current.cancel()
             }
 
-            animation.current = createAnimation(
-               internalRef,
-               mergeTransform(props.keyframes, props.startX, props.startY),
-               { ...props.keyframeOptions, duration: props.durIn, delay: props.delayIn }
-            )
+            animation.current = createAnimation(internalRef, keyframes, {
+               ...props.keyframeOptions,
+               duration: props.durIn,
+               delay: props.delayIn
+            })
+
             animation.current.play()
          } else {
             if (props.reverse && animation.current.playState === 'running') {
@@ -101,9 +111,7 @@ export function Tranzit(
 
             animation.current = createAnimation(
                internalRef,
-               props.reverse
-                  ? mergeTransform(props.keyframes, props.startX, props.startY)
-                  : { opacity: [1, 0] },
+               props.reverse ? keyframes : { opacity: [1, 0] },
                {
                   ...props.keyframeOptions,
                   duration: props.durOut,
@@ -118,18 +126,16 @@ export function Tranzit(
       }
    }, [
       isDestroyed,
-      isMounted,
+      isInitialized,
       initialize,
+      keyframes,
+      props.keyframeOptions,
       props.when,
       props.durIn,
       props.durOut,
       props.delayIn,
       props.delayOut,
-      props.keyframes,
-      props.keyframeOptions,
-      props.reverse,
-      props.startX,
-      props.startY
+      props.reverse
    ])
 
    if (Children.count(props.children) > 1) {
@@ -140,14 +146,12 @@ export function Tranzit(
    return isDestroyed
       ? null
       : Children.map(props.children as ReactElement, (child) => {
-           return cloneElement(child, {
-              ...(child.props ?? {}),
-              ref: (_ref: HTMLElement) => {
-                 if ('ref' in child && 'current' in (child.ref as MRef)) {
-                    ;(child.ref as MRef).current = _ref
-                 }
-                 ;(internalRef as MRef).current = _ref
-              }
-           })
+           if (typeof child.type === 'string') {
+              return cloneElement(child, {
+                 ...child.props,
+                 ref: internalRef
+              })
+           }
+           return createElement('div', { ref: internalRef }, child)
         })[0]
 }
