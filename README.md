@@ -1,6 +1,6 @@
 # Tranzit
 
-500B Dead-simple library to conditionally animate React components using [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
+1KB dead simple library to conditionally animate React components using the [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
 
 <br />
 
@@ -20,7 +20,7 @@ Do:
 </Fade>
 ```
 
-For anything else more complex use a library like [Framer Motion](https://www.framer.com/motion/).
+For anything else more complex use a library like [Framer Motion](https://www.framer.com/motion/) and don't waste your time here.
 
 <br />
 
@@ -40,9 +40,11 @@ No configuration needed besides passing a booleanish value to `when`:
 </Fade>
 ```
 
+The component must have a single child and it must be a React/HTML element.
+
 ### Customization
 
-By default each transition when leaving will fade out. Set `reverse` to **true** to reverse the animation:
+By default each animation when leaving will fade out. Set `reverse` to **true** to reverse it:
 
 ```jsx
 <Slide when={showMenu} reverse>
@@ -58,15 +60,15 @@ Tweak duration and delay:
 </Slide>
 ```
 
-Customize the origin:
+Customize x/y origin:
 
 ```jsx
-<Zoom when={showModal} origin={{ x: -1000, y: -2000 }}>
-  <Modal />
-</Zoom>
+<Slide when={showModal} startY={0} startX={-300}>
+  <MobileMenu />
+</Slide>
 ```
 
-By default, in transitions are not played on first render. Set `initial` to **true** to play the in transition on first render:
+By default, in transitions are not played on first render. Set `initial` to **true** to play them instead:
 
 ```jsx
 <Zoom when={showModal} initial>
@@ -82,7 +84,7 @@ Use `display: none` instead of unmounting:
 </Zoom>
 ```
 
-Use `keep` to keep the layout intact using `visibility: hidden` (for example when rendering form field errors):
+Use `keep` to keep the layout intact using `visibility: hidden`:
 
 ```jsx
 <Zoom when={errors.phoneNumber} keep>
@@ -107,6 +109,33 @@ Nest transitions:
 ```
 
 That's it.
+
+<br />
+
+## Create your own Tranzit component
+
+```tsx
+import { Tranzit, type TranzitProps } from 'tranzit'
+
+export function Bounce(props: TranzitProps) {
+  return (
+    <Tranzit
+      keyframes={{
+        opacity: [0, 1],
+        transformOrigin: ['50% 50%', '50% 50%'],
+        transform: ['scale(2,2)', 'scale(1,1)']
+      }}
+      keyframeOptions={{
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        fill: 'both'
+      }}
+      {...props}
+    />
+  )
+}
+```
+
+**Documentation:** [`keyframes`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API/Keyframe_Formats) - [`keyframeOptions`](https://developer.mozilla.org/en-US/docs/Web/API/KeyframeEffect/KeyframeEffect#parameters)
 
 <br />
 
