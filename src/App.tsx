@@ -4,33 +4,82 @@ import {
    useState,
    cloneElement,
    Children,
-   type RefObject,
    useLayoutEffect,
-   useCallback
+   useCallback,
+   type RefObject
 } from 'react'
 
 const defaultProps: Required<InternalProps & Props> = {
    keyframes: [],
+   keyframeOptions: {},
    when: true,
    children: null,
    reverse: false,
-   skip: true,
+   initial: false,
    hide: false,
    keep: false,
-   delay: { in: 0, out: 0 },
-   duration: { in: 400, out: 400 },
-   origin: { x: 0, y: 0 }
+   durIn: 600,
+   durOut: 400,
+   delayIn: 0,
+   delayOut: 0,
+   yOrigin: 0,
+   xOrigin: 0
+}
+
+function mergeTransform(x: number, y: number, transform: string) {
+   const translateX = `translateX(${x}px)`
+   const translateY = `translateY(${y}px)`
+
+   transform.includes('translateX')
+      ? transform.replace(/translateX\(\d+px\)/, translateX)
+      : (transform = `${transform} ${translateX}`)
+
+   transform.includes('translateY')
+      ? transform.replace(/translateY\(\d+px\)/, translateY)
+      : (transform = `${transform} ${translateY}`)
+
+   return transform
+}
+
+function mergeKeyframes(keyframes: AnimationRef['keyframes'], x: number, y: number) {
+   if (Array.isArray(keyframes)) {
+      const _keyframes = [...keyframes]
+      keyframes[0].transform = mergeTransform(x, y, `${keyframes[0].transform ?? ''}`)
+
+      return _keyframes
+   }
+
+   if (typeof keyframes === 'object') {
+      const _keyframes = { ...keyframes }
+
+      if (Array.isArray(_keyframes.transform)) {
+         _keyframes.transform[0] = mergeTransform(x, y, `${_keyframes.transform[0] ?? ''}`)
+      } else if (!('transform' in _keyframes)) {
+         _keyframes.transform = [mergeTransform(x, y, '')]
+      }
+
+      return _keyframes
+   }
+
+   return keyframes
 }
 
 export function Fade(props: Props) {
    return (
       <Tranzit
-         duration={{ in: 400, out: 400 }}
-         origin={{ x: 0, y: 0 }}
+         durIn={600}
+         durOut={300}
+         yOrigin={0}
+         xOrigin={0}
          {...props}
          keyframes={{
             opacity: [0, 1],
-            transform: ['translateY(-200px) translateX(0px)', 'translateY(0px) translateX(0px)']
+            transformOrigin: ['50% 50%', '50% 50%'],
+            transform: ['scale(2,2)', 'scale(1,1)']
+         }}
+         keyframeOptions={{
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            fill: 'both'
          }}
       />
    )
@@ -38,6 +87,7 @@ export function Fade(props: Props) {
 
 type InternalProps = {
    keyframes: AnimationRef['keyframes']
+   keyframeOptions: AnimationRef['keyframeOptions']
 }
 
 type Props = {
@@ -45,12 +95,15 @@ type Props = {
    // eslint-disable-next-line @typescript-eslint/no-explicit-any
    children: any
    reverse?: boolean
-   skip?: boolean
+   initial?: boolean
    hide?: boolean
    keep?: boolean
-   duration?: number | { in: number; out: number }
-   delay?: number | { in: number; out: number }
-   origin?: { x: number; y: number }
+   durIn?: number
+   durOut?: number
+   delayIn?: number
+   delayOut?: number
+   yOrigin?: number
+   xOrigin?: number
 }
 
 type AnimationRef = {
@@ -58,36 +111,7 @@ type AnimationRef = {
    keyframeOptions: KeyframeAnimationOptions
 }
 
-function getDuration(duration: Props['duration'], prop: 'in' | 'out' = 'in') {
-   if (typeof duration === 'number') return duration
-   if (typeof duration === 'object') {
-      return duration[prop] ?? (defaultProps.duration as { in: number; out: number })[prop]
-   }
-}
-
-function getOriginTransform(origin: Props['origin']) {
-   return `translateY(${origin?.y || 0}px) translateX(${origin?.x || 0}px)`
-}
-
-function getOptions(duration: Props['duration'], delay: Props['delay']): KeyframeAnimationOptions {
-   return {
-      duration: getDuration(duration),
-      delay: getDuration(delay),
-      fill: 'forwards'
-   }
-}
-
-function usePrevious(value: unknown) {
-   const ref = useRef<unknown>()
-
-   useEffect(() => {
-      ref.current = value
-   }, [value])
-
-   return ref.current
-}
-
-function useOnMount(callback: () => void) {
+function useOnFirstMount(callback: () => void) {
    const isInitial = useRef(true)
    const _callback = useCallback(callback, [callback])
 
@@ -112,84 +136,127 @@ function createAnimation(
 export function Tranzit(_props: InternalProps & Props = defaultProps) {
    const props = { ...defaultProps, ..._props }
 
-   const [destroyed, setDestroyed] = useState(false)
-   const prevWhen = usePrevious(props.when)
-   const prevDestroyed = usePrevious(destroyed)
-
+   const [isDestroyed, setIsDestroyed] = useState(false)
    const ref = useRef<HTMLDivElement>(null)
-   const animations = useRef({ in: createAnimation(), out: createAnimation() })
+   const animation = useRef(createAnimation())
+   const userStyles = useRef({ display: '', visibility: '' })
 
-   const isMounted = useOnMount(() => {
+   const initialize = useCallback(() => {
+      if (!ref.current) return
+
+      userStyles.current.display = getComputedStyle(ref.current).display
+      userStyles.current.visibility = getComputedStyle(ref.current).visibility
+
+      if (props.keep) return ref.current.style.setProperty('visibility', 'hidden')
+      if (props.hide) return ref.current.style.setProperty('display', 'none')
+
+      setIsDestroyed(true)
+   }, [props.hide, props.keep])
+
+   const isMounted = useOnFirstMount(() => {
       if (props.when) {
-         if (!props.skip) {
-            animations.current.in = createAnimation(
+         if (props.initial) {
+            animation.current = createAnimation(
                ref,
-               props.keyframes,
-               getOptions(props.duration, props.delay)
+               mergeKeyframes(props.keyframes, props.xOrigin, props.yOrigin),
+               {
+                  duration: props.durIn,
+                  delay: props.delayIn,
+                  ...props.keyframeOptions
+               }
             )
 
-            animations.current.in.play()
+            animation.current.play()
          }
       } else {
-         setDestroyed(true)
+         initialize()
       }
    })
 
-   useEffect(() => {
-      if (
-         isMounted &&
-         /* Ensure better behavior in StrictMode */
-         (prevWhen !== props.when || prevDestroyed !== destroyed)
-      ) {
-         if (props.when) {
-            // If no ref, trigger re-render, code below will execute again
-            if (!ref.current) return setDestroyed(false)
+   useLayoutEffect(() => {
+      if (isMounted && props.when) {
+         if (!ref.current) {
+            setIsDestroyed(false)
+         } else {
+            if (props.keep)
+               return ref.current.style.setProperty('visibility', userStyles.current.visibility)
+            if (props.hide)
+               return ref.current.style.setProperty('display', userStyles.current.display)
+         }
+      }
+   }, [isMounted, props.when, props.hide, props.keep])
 
-            // If transitioning out, cancel the animation and start a new one
-            if (animations.current.out.playState !== 'finished') {
-               console.log('Canceling animation - out')
-               animations.current.out.onfinish = null
-               animations.current.out.cancel()
+   useEffect(() => {
+      if (isDestroyed) return
+      if (isMounted) {
+         if (props.when) {
+            if (animation.current.playState === 'running') {
+               animation.current.onfinish = null
+
+               if (props.reverse) {
+                  return animation.current.reverse()
+               }
+
+               animation.current.cancel()
             }
 
-            animations.current.in = createAnimation(
+            animation.current = createAnimation(
                ref,
-               props.keyframes,
-               getOptions(props.duration, props.delay)
+               mergeKeyframes(props.keyframes, props.xOrigin, props.yOrigin),
+               {
+                  duration: props.durIn,
+                  delay: props.delayIn,
+                  ...props.keyframeOptions
+               }
             )
-
-            animations.current.in.play()
+            animation.current.play()
          } else {
-            // Do nothing if transitioning in, just replace any common property and wait for unmount
-            animations.current.out = createAnimation(
-               ref,
-               { opacity: [1, 0] },
-               { ...getOptions(props.duration, props.delay), fill: 'both', composite: 'replace' }
-            )
+            if (props.reverse && animation.current.playState === 'running') {
+               animation.current.onfinish = initialize
+               return animation.current.reverse()
+            }
 
-            animations.current.out.play()
-            animations.current.out.onfinish = () => setDestroyed(true)
+            animation.current = createAnimation(
+               ref,
+               props.reverse
+                  ? mergeKeyframes(props.keyframes, props.xOrigin, props.yOrigin)
+                  : { opacity: [1, 0] },
+               {
+                  duration: props.durOut,
+                  delay: props.delayOut,
+                  composite: 'replace',
+                  direction: props.reverse ? 'reverse' : 'normal',
+                  ...props.keyframeOptions
+               }
+            )
+            animation.current.play()
+            animation.current.onfinish = initialize
          }
       }
    }, [
+      isDestroyed,
       isMounted,
-      prevWhen,
+      initialize,
       props.when,
-      prevDestroyed,
-      destroyed,
-      props.delay,
-      props.duration,
-      props.keyframes
+      props.durIn,
+      props.durOut,
+      props.delayIn,
+      props.delayOut,
+      props.keyframes,
+      props.keyframeOptions,
+      props.reverse,
+      props.xOrigin,
+      props.yOrigin
    ])
 
-   console.count('Render count')
+   // console.count('Render count')
 
    if (Children.count(props.children) > 1) {
       console.error('Tranzit can only have one child')
       return null
    }
 
-   return destroyed
+   return isDestroyed
       ? null
       : Children.map(props.children, (child) =>
            cloneElement(child, {
@@ -200,7 +267,7 @@ export function Tranzit(_props: InternalProps & Props = defaultProps) {
 }
 
 export function App() {
-   const [show, setShow] = useState(true)
+   const [show, setShow] = useState(false)
 
    return (
       <div>
@@ -214,7 +281,7 @@ export function App() {
          >
             Toggle
          </button>
-         <Fade when={show} origin={{ y: -600, x: 0 }} keep reverse>
+         <Fade when={show} yOrigin={-600} reverse initial>
             <div style={circleStyles}>Buonasera</div>
          </Fade>
       </div>

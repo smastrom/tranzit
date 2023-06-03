@@ -1,12 +1,10 @@
 # Tranzit
 
-500B Dead-simple library to conditionally render React components using [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
+500B Dead-simple library to conditionally animate React components using [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
 
 <br />
 
-## Why?
-
-Sometimes you're just looking for a straightforward way to conditionally transition components.
+## How?
 
 Instead of:
 
@@ -22,7 +20,7 @@ Do:
 </Fade>
 ```
 
-For anything else more complex you should use a library like [Framer Motion](https://www.framer.com/motion/).
+For anything else more complex use a library like [Framer Motion](https://www.framer.com/motion/).
 
 <br />
 
@@ -55,11 +53,7 @@ By default each transition when leaving will fade out. Set `reverse` to **true**
 Tweak duration and delay:
 
 ```jsx
-<Slide
-  when={showModal}
-  duration={{ in: 300, out: 200 }} // or just duration={200} for both
-  delay={{ in: 300, out: 200 }} // Same here
->
+<Slide when={showModal} durIn={300} durOut={200} delayIn={100} delayOut={0}>
   <Modal />
 </Slide>
 ```
@@ -72,10 +66,10 @@ Customize the origin:
 </Zoom>
 ```
 
-Skip the animation on mount:
+By default, in transitions are not played on first render. Set `initial` to **true** to play the in transition on first render:
 
 ```jsx
-<Zoom when={showModal} skip>
+<Zoom when={showModal} initial>
   <Modal />
 </Zoom>
 ```
@@ -91,7 +85,7 @@ Use `display: none` instead of unmounting:
 Use `keep` to keep the layout intact using `visibility: hidden` (for example when rendering form field errors):
 
 ```jsx
-<Zoom when={errors.phoneNumber} persist>
+<Zoom when={errors.phoneNumber} keep>
   <div className="error">{errors.phoneNumber}</div>
 </Zoom>
 ```
@@ -101,9 +95,9 @@ Nest transitions:
 ```jsx
 <Fade when={showModal}>
   <ModalBackground>
-    <Slide when={showModal} delay={{ in: 200, out: 0 }}>
+    <Slide when={showModal} delayIn={200}>
       <ModalContent>
-        <Zoom when={showModal} delay={{ in: 400, out: 0 }}>
+        <Zoom when={showModal} delayIn={400}>
           <Modal />
         </Zoom>
       </ModalContent>
