@@ -1,3 +1,5 @@
+import type { ReactElement, MutableRefObject } from 'react'
+
 export interface AnimationRef {
    keyframes: Keyframe[] | PropertyIndexedKeyframes
    keyframeOptions: KeyframeAnimationOptions
@@ -10,8 +12,7 @@ export interface InternalProps {
 
 export interface Props {
    when: unknown
-   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-   children: any
+   children: ReactElement | null
    reverse?: boolean
    initial?: boolean
    hide?: boolean
@@ -23,3 +24,5 @@ export interface Props {
    startY?: number
    startX?: number
 }
+
+export type MRef = MutableRefObject<HTMLElement>

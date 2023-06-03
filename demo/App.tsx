@@ -1,8 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Fade } from '../src'
 
 export function App() {
    const [show, setShow] = useState(false)
+
+   const ref = useRef<HTMLDivElement>(null)
+
+   useEffect(() => {
+      console.log('App.tsx', ref)
+   }, [])
 
    return (
       <div>
@@ -17,7 +23,9 @@ export function App() {
             Toggle
          </button>
          <Fade when={show} startY={-600} reverse initial>
-            <div style={circleStyles}>Buonasera</div>
+            <div ref={ref} style={circleStyles}>
+               Buonasera
+            </div>
          </Fade>
       </div>
    )

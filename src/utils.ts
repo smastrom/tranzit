@@ -23,7 +23,7 @@ export function useOnFirstMount(_callback: () => void) {
    return !isInitial.current
 }
 
-export function mergeTransform(x: number, y: number, transform: string) {
+export function mergeTranslate(x: number, y: number, transform: string) {
    const translateX = `translateX(${x}px)`
    const translateY = `translateY(${y}px)`
 
@@ -38,10 +38,10 @@ export function mergeTransform(x: number, y: number, transform: string) {
    return transform
 }
 
-export function mergeKeyframes(_keyframes: AnimationRef['keyframes'], x: number, y: number) {
+export function mergeTransform(_keyframes: AnimationRef['keyframes'], x: number, y: number) {
    if (Array.isArray(_keyframes)) {
       const keyframes = [..._keyframes]
-      keyframes[0].transform = mergeTransform(x, y, `${keyframes[0].transform ?? ''}`)
+      keyframes[0].transform = mergeTranslate(x, y, `${keyframes[0].transform ?? ''}`)
 
       return keyframes
    }
@@ -50,9 +50,9 @@ export function mergeKeyframes(_keyframes: AnimationRef['keyframes'], x: number,
       const keyframes = { ..._keyframes }
 
       if (Array.isArray(keyframes.transform)) {
-         keyframes.transform[0] = mergeTransform(x, y, `${keyframes.transform[0] ?? ''}`)
+         keyframes.transform[0] = mergeTranslate(x, y, `${keyframes.transform[0] ?? ''}`)
       } else if (!('transform' in _keyframes)) {
-         keyframes.transform = [mergeTransform(x, y, '')]
+         keyframes.transform = [mergeTranslate(x, y, '')]
       }
 
       return keyframes
