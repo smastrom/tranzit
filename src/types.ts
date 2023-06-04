@@ -1,4 +1,4 @@
-import type { ReactElement, MutableRefObject } from 'react'
+import type { ReactElement, MutableRefObject, ReactHTMLElement } from 'react'
 
 export interface AnimationRef {
    keyframes: Keyframe[] | PropertyIndexedKeyframes
@@ -25,4 +25,5 @@ export interface Props {
    startX?: number
 }
 
-export type MRef = MutableRefObject<HTMLElement>
+export type ReactHTML = ReactHTMLElement<HTMLElement>
+export type MutableRef = MutableRefObject<HTMLElement>

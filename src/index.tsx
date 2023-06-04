@@ -6,6 +6,7 @@ export { Tranzit } from './Tranzit'
 export function Fade(props: Props) {
    return (
       <Tranzit
+         durIn={800}
          keyframes={{
             opacity: [0, 1]
          }}
@@ -21,6 +22,7 @@ export function Fade(props: Props) {
 export function Slide(props: Props) {
    return (
       <Tranzit
+         durIn={800}
          keyframes={{
             opacity: [0, 1],
             transform: ['translate3d(-600px, 0, 0)', 'translate3d(0, 0, 0)']
@@ -37,7 +39,7 @@ export function Slide(props: Props) {
 export function Bling(props: Props) {
    return (
       <Tranzit
-         durIn={800}
+         durIn={600}
          keyframes={{
             opacity: [0, 1],
             transformOrigin: ['50% 50%', '50% 50%'],

@@ -1,6 +1,6 @@
 # Tranzit
 
-1KB dead simple library to conditionally animate React components using the [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
+1KB dead simple library to conditionally animate React components using performant [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
 
 [Live Demo](https://trazit.netlify.app) - Real world examples: [Menu]() - [Modal]() - [Intersection Observer]()
 
@@ -70,7 +70,7 @@ By default each animation when leaving will fade out. Set `reverse` to **true** 
 </Slide>
 ```
 
-Tweak duration and delay:
+Customize duration and delay:
 
 ```jsx
 <Slide when={showModal} durIn={300} durOut={200} delayIn={100} delayOut={0}>
@@ -78,7 +78,7 @@ Tweak duration and delay:
 </Slide>
 ```
 
-Customize x/y origin (works with any component):
+Customize x/y origin (works with any component, also custom ones):
 
 ```jsx
 <Fade when={showModal} startY={0} startX={-300}>
@@ -126,8 +126,6 @@ Nest transitions:
 </Fade>
 ```
 
-That's it.
-
 <br />
 
 ## Create your own
@@ -172,6 +170,46 @@ export function Bounce(props: TranzitProps) {
 | `delayOut` | `number`    | `0`     | Delay when leaving                            |
 | `startY`   | `number`    | `0`     | Y origin when entering                        |
 | `startX`   | `number`    | `0`     | X origin when entering                        |
+
+<br />
+
+## Caveats
+
+When using a component as child, Tranzit will render it inside a `<div>` tag.
+
+```jsx
+<Fade when={showModal}>
+  <MyComponent /> {/* <-- Will be rendered inside a <div> tag */}
+</Fade>
+```
+
+```jsx
+<Fade when={showModal}>
+  <h1>This is a great title.<h1/> {/* <-- Will be rendered as is */}
+</Fade>
+```
+
+While most of the times this is fine, you might need control over the element (for semantic reasons or because you're dealing within a complex layout).
+
+Wrap the component in a HTML element of your choice:
+
+```jsx
+<Fade when={showModal}>
+  <div>
+    <MyComponent />
+  </div>
+</Fade>
+```
+
+Tranzit will render your element (a `<div>` in this case) as is. You can add classes, styles, refs and use any tag you want.
+
+```jsx
+<Fade when={showModal}>
+  <div ref={myRef} className="myClass" style={{ backgroundColor: 'red' }}>
+    <MyComponent />
+  </div>
+</Fade>
+```
 
 <br />
 

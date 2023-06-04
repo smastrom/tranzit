@@ -12,7 +12,7 @@ import {
    type ReactElement
 } from 'react'
 import { createAnimation, useOnBeforeFirstPaint, mergeTransform, defaultProps } from './utils'
-import type { InternalProps, Props } from './types'
+import type { InternalProps, Props, MutableRef, ReactHTML } from './types'
 
 export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | null {
    const props = { ...defaultProps, ...tranzitProps }
@@ -139,7 +139,7 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
       props.keep
    ])
 
-   // console.count('Render count')
+   console.count('Render count')
 
    if (Children.count(props.children) > 1) {
       console.error('Any Tranzit component must have exactly one child.')
@@ -148,13 +148,21 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
 
    return isDestroyed
       ? null
-      : Children.map(props.children as ReactElement, (child) => {
+      : Children.map(props.children as ReactHTML, (child) => {
            if (typeof child.type === 'string') {
               return cloneElement(child, {
                  ...child.props,
-                 ref: internalRef
+                 ref: (el: HTMLElement) => {
+                    ;(internalRef as MutableRef).current = el
+
+                    if (typeof child.ref === 'function') child.ref(el)
+                    if (typeof child.ref === 'object' && child.ref !== null) {
+                       ;(child.ref as MutableRef).current = el
+                    }
+                 }
               })
            }
+
            return createElement('div', { ref: internalRef }, child)
         })[0]
 }

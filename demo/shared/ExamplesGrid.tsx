@@ -17,11 +17,14 @@ import {
    Flip
 } from '../../src'
 import { useStore } from '../store'
+import { useEffect, useRef } from 'react'
 
 const Circle = () => <div className="Example_circle" />
 
 export function ExamplesGrid() {
    const { reverse, customOrigin, hideType, duration } = useStore()
+
+   const ref = useRef<HTMLDivElement | null>(null)
 
    const commonProps = (state: boolean) => ({
       when: state,
@@ -31,6 +34,10 @@ export function ExamplesGrid() {
       ...(duration === 'Component Default' ? {} : { durIn: duration }),
       ...(customOrigin ?? {})
    })
+
+   useEffect(() => {
+      console.log('ref.current', ref.current)
+   }, [])
 
    return (
       <>
@@ -46,7 +53,7 @@ export function ExamplesGrid() {
             title="Slide"
             render={(state) => (
                <Slide {...commonProps(state)}>
-                  <div className="Example_circle" />
+                  <div className="Example_circle" ref={ref} />
                </Slide>
             )}
          />
