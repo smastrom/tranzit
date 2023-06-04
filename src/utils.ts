@@ -9,89 +9,69 @@ export function createAnimation(
    return new Animation(new KeyframeEffect(ref.current, keyframes, options), document.timeline)
 }
 
-export function useOnBeforeFirstPaint(callback: () => void) {
+export function useOnBeforeFirstPaint(fn: () => void) {
    const isMounted = useRef(false)
-   const _callback = useCallback(callback, [callback])
+   const callback = useCallback(fn, [fn])
 
    useLayoutEffect(() => {
       if (!isMounted.current) {
-         _callback()
+         callback()
       }
       isMounted.current = true
-   }, [_callback])
+   }, [callback])
 
    return isMounted.current
 }
 
-const replace = (str: string, value = '') => str.replace(/translate\([^)]+\)/, value)
-const replace3d = (str: string, value = '') => str.replace(/translate3d\([^)]+\)/, value)
-const replaceX = (str: string, value = '') => str.replace(/translateX\([^)]+\)/, value)
-const replaceY = (str: string, value = '') => str.replace(/translateY\([^)]+\)/, value)
-
 export function mergeTranslate(x: number, y: number, transform: string) {
-   if (x === 0 && y === 0) return transform
+   if ((x === 0 && y === 0) || !transform) return transform
 
-   const translate = `translate(${x}px, ${y}px)`
-   const translate3d = `translate3d(${x}px, ${y}px, 0)`
-   const translateX = `translateX(${x}px)`
-   const translateY = `translateY(${y}px)`
+   const tN = `translate(${x}px, ${y}px)`
+   const t3d = `translate3d(${x}px, ${y}px, 0)`
+   const tX = `translateX(${x}px)`
+   const tY = `translateY(${y}px)`
 
-   if (transform.includes('translate(')) {
-      transform = replace(transform, translate)
-      transform = replace3d(transform)
-      transform = replaceX(transform)
-      transform = replaceY(transform)
-      return transform
-   }
-
-   if (transform.includes('translate3d')) {
-      transform = replace3d(transform, translate3d)
-      transform = replace(transform)
-      transform = replaceX(transform)
-      transform = replaceY(transform)
-      return transform
-   }
+   if (transform.includes('translate(')) return transform.replace(/translate\([^)]+\)/, tN)
+   if (transform.includes('translate3d')) return transform.replace(/translate3d\([^)]+\)/, t3d)
 
    transform = transform.includes('translateX')
-      ? replaceX(transform, translateX)
-      : `${transform} ${translateX}`
+      ? transform.replace(/translateX\([^)]+\)/, tX)
+      : `${transform} ${tX}`
 
    transform = transform.includes('translateY')
-      ? replaceY(transform, translateY)
-      : `${transform} ${translateY}`
-
-   transform = replace(transform)
-   transform = replace3d(transform)
+      ? transform.replace(/translateX\([^)]+\)/, tY)
+      : `${transform} ${tY}`
 
    return transform
 }
 
 export function mergeTransform(keyframes: AnimationRef['keyframes'], x: number, y: number) {
    if (Array.isArray(keyframes)) {
-      const _keyframes = [...keyframes]
+      const kf = [...keyframes]
 
-      if ('transform' in _keyframes[0]) {
-         _keyframes[0].transform = mergeTranslate(x, y, `${_keyframes[0].transform ?? ''}`)
+      if ('transform' in kf[0]) {
+         kf[0].transform = mergeTranslate(x, y, `${kf[0].transform}`)
       } else {
          if (x !== 0 || y !== 0) {
-            _keyframes.unshift({ transform: mergeTranslate(x, y, '') })
-            _keyframes.push({ transform: 'translateX(0) translateY(0)' })
+            kf[0] = { ...kf[0], transform: `translate(${x}px, ${y}px)` }
+            kf[kf.length - 1] = { ...kf[kf.length - 1], transform: 'translate(0, 0)' }
          }
       }
-      return _keyframes
+      return kf
    }
 
+   // Indexed-property keyframes
    if (typeof keyframes === 'object') {
-      const _keyframes = { ...keyframes }
+      const kf = { ...keyframes }
 
-      if (Array.isArray(_keyframes.transform)) {
-         _keyframes.transform[0] = mergeTranslate(x, y, `${_keyframes.transform[0] ?? ''}`)
-      } else if (!('transform' in _keyframes)) {
+      if (Array.isArray(kf.transform)) {
+         kf.transform[0] = mergeTranslate(x, y, `${kf.transform[0] ?? ''}`)
+      } else if (!('transform' in kf)) {
          if (x !== 0 || y !== 0) {
-            _keyframes.transform = [mergeTranslate(x, y, ''), 'translateX(0) translateY(0)']
+            kf.transform = [`translate(${x}px, ${y}px)`, 'translate(0, 0)']
          }
       }
-      return _keyframes
+      return kf
    }
 
    return keyframes

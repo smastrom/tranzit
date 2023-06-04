@@ -1,5 +1,6 @@
 import { useStore } from '../store'
 import type { Hide, Duration } from '../store/types'
+
 const durationOptions: Duration[] = ['Component Default', 100, 300, 500, 700, 1000, 1500, 2000]
 const hideOptions: Hide[] = ['unmount', 'keep', 'hide']
 
@@ -51,7 +52,7 @@ export function Header() {
                         checked={reverse}
                         onChange={toggleReverse}
                      />
-                     <label htmlFor="reverse">Reverse</label>
+                     <label htmlFor="reverse">Reverse on Leave</label>
                   </div>
 
                   <div className="Header_nav-field ">
@@ -61,7 +62,7 @@ export function Header() {
                         checked={customOrigin !== null}
                         onChange={toggleCustomOrigin}
                      />
-                     <label htmlFor="custom_origin">Custom origin (random)</label>
+                     <label htmlFor="custom_origin">Set random origin</label>
                   </div>
                </div>
             </div>

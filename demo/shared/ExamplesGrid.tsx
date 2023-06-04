@@ -36,7 +36,7 @@ export function ExamplesGrid() {
    })
 
    useEffect(() => {
-      console.log('ref.current', ref.current)
+      // console.log('ref.current', ref.current)
    }, [])
 
    return (

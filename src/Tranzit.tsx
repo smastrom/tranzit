@@ -21,7 +21,12 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
 
    const internalRef = useRef<HTMLDivElement>(null)
    const animation = useRef(createAnimation())
-   const userStyles = useRef({ display: '', visibility: '' })
+   const userStyles = useRef({
+      display: '',
+      visibility: '',
+      hasInlineDisplay: false,
+      hasInlineVisibility: false
+   })
 
    const [isDestroyed, setIsDestroyed] = useState(false)
 
@@ -42,9 +47,13 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
    const isInitialized = useOnBeforeFirstPaint(() => {
       if (!internalRef.current) return
 
+      const styles = getComputedStyle(internalRef.current)
+
       userStyles.current = {
-         display: getComputedStyle(internalRef.current).getPropertyValue('display'),
-         visibility: getComputedStyle(internalRef.current).getPropertyValue('visibility')
+         display: styles.getPropertyValue('display'),
+         visibility: styles.getPropertyValue('visibility'),
+         hasInlineDisplay: internalRef.current.style.display !== '',
+         hasInlineVisibility: internalRef.current.style.visibility !== ''
       }
 
       if (props.when) {
@@ -72,18 +81,21 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
    useEffect(() => {
       if (isDestroyed) return
       if (prevWhen === props.when) return
+      if (!internalRef.current) return
       if (isInitialized) {
          if (props.when) {
-            if (!internalRef.current) return
-
             animation.current.onfinish = null
 
             if (props.keep) {
-               internalRef.current.style.visibility = userStyles.current.visibility
+               internalRef.current.style.visibility = userStyles.current.hasInlineDisplay
+                  ? userStyles.current.visibility
+                  : ''
             }
 
             if (props.hide) {
-               internalRef.current.style.display = userStyles.current.display
+               internalRef.current.style.display = userStyles.current.hasInlineVisibility
+                  ? userStyles.current.display
+                  : ''
             }
 
             if (animation.current.playState === 'running') {
@@ -139,12 +151,7 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
       props.keep
    ])
 
-   console.count('Render count')
-
-   if (Children.count(props.children) > 1) {
-      console.error('Any Tranzit component must have exactly one child.')
-      return null
-   }
+   // console.count('Render count')
 
    return isDestroyed
       ? null
