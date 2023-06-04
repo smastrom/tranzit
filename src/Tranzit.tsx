@@ -1,22 +1,23 @@
 import {
    useRef,
    useState,
+   useCallback,
+   useMemo,
+   useDeferredValue,
+   createElement,
    cloneElement,
    Children,
    useEffect,
    useLayoutEffect,
-   useCallback,
-   type ReactElement,
-   createElement,
-   useMemo
+   type ReactElement
 } from 'react'
-import { createAnimation, useOnFirstMount, mergeTransform, defaultProps } from './utils'
+import { createAnimation, useOnBeforeFirstPaint, mergeTransform, defaultProps } from './utils'
 import type { InternalProps, Props } from './types'
 
-export function Tranzit(
-   tranzitProps: InternalProps & Props = defaultProps
-): ReactElement | null {
+export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | null {
    const props = { ...defaultProps, ...tranzitProps }
+
+   const prevWhen = useDeferredValue(props.when)
 
    const internalRef = useRef<HTMLDivElement>(null)
    const animation = useRef(createAnimation())
@@ -29,83 +30,79 @@ export function Tranzit(
       [props.keyframes, props.startX, props.startY]
    )
 
-   // Called on first mount and on leave animation finish
-   const initialize = useCallback(() => {
+   const reset = useCallback(() => {
       if (!internalRef.current) return
 
-      userStyles.current.display = getComputedStyle(internalRef.current).display
-      userStyles.current.visibility = getComputedStyle(internalRef.current).visibility
+      if (!props.keep && !props.hide) setIsDestroyed(true)
 
-      if (props.keep) return internalRef.current.style.setProperty('visibility', 'hidden')
-      if (props.hide) return internalRef.current.style.setProperty('display', 'none')
-
-      setIsDestroyed(true)
+      if (props.keep) internalRef.current.style.visibility = 'hidden'
+      if (props.hide) internalRef.current.style.display = 'none'
    }, [props.hide, props.keep])
 
-   const isInitialized = useOnFirstMount(() => {
+   const isInitialized = useOnBeforeFirstPaint(() => {
+      if (!internalRef.current) return
+
+      userStyles.current = {
+         display: getComputedStyle(internalRef.current).getPropertyValue('display'),
+         visibility: getComputedStyle(internalRef.current).getPropertyValue('visibility')
+      }
+
       if (props.when) {
          // Play animation on mount
          if (props.initial) {
             animation.current = createAnimation(internalRef, keyframes, {
-               ...props.keyframeOptions,
                duration: props.durIn,
-               delay: props.delayIn
+               delay: props.delayIn,
+               ...props.keyframeOptions
             })
             animation.current.play()
          }
       } else {
          // Hide/unmount child
-         initialize()
+         reset()
       }
    })
 
-   // Handles 'when' change to true, called before paint
    useLayoutEffect(() => {
-      if (isInitialized && props.when) {
-         if (!internalRef.current) {
-            // Not using keep/hide, was unmounted on initialization/onFinish -> mount child
-            setIsDestroyed(false)
-         } else {
-            // Restore visibility/display, keep has priority over hide
-            if (props.keep)
-               return internalRef.current.style.setProperty(
-                  'visibility',
-                  userStyles.current.visibility
-               )
-            if (props.hide)
-               return internalRef.current.style.setProperty(
-                  'display',
-                  userStyles.current.display
-               )
-         }
+      if (isInitialized && props.when && !internalRef.current) {
+         setIsDestroyed(false)
       }
-   }, [isInitialized, props.when, props.hide, props.keep])
+   }, [isInitialized, props.when])
 
-   // Handles animations, runs after paint, only if 'child' is mounted
    useEffect(() => {
       if (isDestroyed) return
+      if (prevWhen === props.when) return
       if (isInitialized) {
          if (props.when) {
-            if (animation.current.playState === 'running') {
-               animation.current.onfinish = null
+            if (!internalRef.current) return
 
+            animation.current.onfinish = null
+
+            if (props.keep) {
+               internalRef.current.style.visibility = userStyles.current.visibility
+            }
+
+            if (props.hide) {
+               internalRef.current.style.display = userStyles.current.display
+            }
+
+            if (animation.current.playState === 'running') {
                if (props.reverse) {
                   return animation.current.reverse()
                }
-
                animation.current.cancel()
             }
 
             animation.current = createAnimation(internalRef, keyframes, {
-               ...props.keyframeOptions,
                duration: props.durIn,
-               delay: props.delayIn
+               delay: props.delayIn,
+               composite: 'replace',
+               ...props.keyframeOptions
             })
-
             animation.current.play()
          } else {
             if (props.reverse && animation.current.playState === 'running') {
-               animation.current.onfinish = initialize
+               animation.current.onfinish = reset
                return animation.current.reverse()
             }
 
@@ -113,21 +110,23 @@ export function Tranzit(
                internalRef,
                props.reverse ? keyframes : { opacity: [1, 0] },
                {
-                  ...props.keyframeOptions,
                   duration: props.durOut,
                   delay: props.delayOut,
                   composite: 'replace',
+                  ...props.keyframeOptions,
                   direction: props.reverse ? 'reverse' : 'normal'
                }
             )
+
             animation.current.play()
-            animation.current.onfinish = initialize
+            animation.current.onfinish = reset
          }
       }
    }, [
       isDestroyed,
       isInitialized,
-      initialize,
+      reset,
+      prevWhen,
       keyframes,
       props.keyframeOptions,
       props.when,
@@ -135,8 +134,12 @@ export function Tranzit(
       props.durOut,
       props.delayIn,
       props.delayOut,
-      props.reverse
+      props.reverse,
+      props.hide,
+      props.keep
    ])
+
+   // console.count('Render count')
 
    if (Children.count(props.children) > 1) {
       console.error('Any Tranzit component must have exactly one child.')

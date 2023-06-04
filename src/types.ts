@@ -11,7 +11,7 @@ export interface InternalProps {
 }
 
 export interface Props {
-   when: unknown
+   when: boolean | string | number | null | undefined
    children: ReactElement | null
    reverse?: boolean
    initial?: boolean

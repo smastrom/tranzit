@@ -1,0 +1,226 @@
+:root {
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+   -webkit-text-size-adjust: 100%;
+   --border-accent: #b34fff;
+   --border: #42255b;
+   --background: #0e0c10;
+   --foreground: rgba(255, 255, 255, 0.85);
+}
+
+* {
+   box-sizing: border-box;
+}
+
+html {
+   color: var(--foreground);
+   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+   line-height: 1.5;
+   font-weight: 400;
+   color-scheme: dark;
+   font-synthesis: none;
+   text-rendering: optimizeLegibility;
+}
+
+html,
+body,
+h1 {
+   margin: 0;
+   padding: 0;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+   cursor: pointer;
+   width: 1rem;
+   height: 1rem;
+   margin: 0;
+}
+
+label {
+   cursor: pointer;
+   white-space: nowrap;
+}
+
+body {
+   background-color: var(--background);
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   min-width: 320px;
+   min-height: 100vh;
+}
+
+#root {
+   padding: 2rem 3rem 3rem 3rem;
+   width: 1280px;
+   max-width: 100%;
+   display: grid;
+   grid-template-columns: 1fr 1fr 1fr;
+   column-gap: 3rem;
+   row-gap: 6rem;
+}
+
+@media (max-width: 1024px) {
+   #root {
+      padding: 2rem 2rem 3rem 2rem;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+   }
+}
+
+@media (max-width: 768px) {
+   #root {
+      padding: 2rem 1rem 3rem 1rem;
+      grid-template-columns: 1fr;
+   }
+}
+
+/* Header */
+
+.Header_top {
+   padding: 0 0 0.75rem 0;
+   background: var(--background);
+}
+
+.Header_top-title {
+   display: flex;
+   align-items: center;
+   gap: 1rem;
+   margin-bottom: 0.75rem;
+}
+
+.Header_label {
+   font-weight: 700;
+   margin-bottom: 0.625rem;
+   display: block;
+}
+
+.Header_nav-field {
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+}
+
+.Header_nav {
+   display: grid;
+   background: var(--background);
+   border: 1px solid var(--border);
+   border-radius: 1rem;
+   padding: 1rem;
+   font-size: 0.875rem;
+   gap: 1.25rem;
+}
+
+.Header_nav-checkbox-container {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 1.25rem;
+}
+
+.Header_nav-radios-container {
+   display: flex;
+   flex-wrap: wrap;
+   column-gap: 1.25rem;
+   row-gap: 0.5rem;
+}
+
+.Github_icon {
+   display: flex;
+   width: 1.5rem;
+   height: 1.5rem;
+   fill: var(--foreground);
+   transition: all 100ms ease-in-out;
+}
+
+.Github_icon:hover {
+   fill: white;
+}
+
+/* CodeBlock */
+
+.CodeBlock_container {
+   overflow: auto;
+   padding: 1rem;
+   border-radius: 1rem;
+   border: 1px solid var(--border);
+   font-size: 0.825rem;
+   grid-row: 1;
+   grid-column: 2 / span 2;
+   position: relative;
+}
+
+@media (max-width: 1024px) {
+   .CodeBlock_container {
+      grid-column: 2;
+   }
+}
+
+@media (max-width: 768px) {
+   .CodeBlock_container {
+      grid-row: 2;
+      grid-column: 1;
+   }
+}
+
+.CodeBlock_copy-button {
+   position: absolute;
+   right: 1rem;
+   bottom: 1rem;
+   padding: 0.5rem !important;
+   z-index: 10 !important;
+   background: var(--background) !important;
+}
+
+/* Example */
+
+.Example_circle {
+   background-color: red;
+   padding: 2rem;
+   border-radius: 999px;
+   aspect-ratio: 1;
+   width: 120px;
+   height: 120px;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   border: 2px solid var(--border-accent);
+   background: linear-gradient(to right, #e100ff, #7f00ff);
+}
+
+.Example_header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 1rem;
+}
+
+.Example_container {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   height: 250px;
+   border-radius: 1rem;
+   border: 1px solid #42255b;
+   background: rgb(20, 15, 24);
+}
+
+.Example_button,
+.CodeBlock_copy-button {
+   cursor: pointer;
+   width: 80px;
+   padding: 0.5rem 1rem;
+   border-radius: 0.5rem;
+   font-weight: 700;
+   border: 1px solid #42255b;
+   background: none;
+   color: rgba(255, 255, 255, 0.75);
+   transition: all 100ms ease-in-out;
+}
+
+.Example_button:hover,
+.CodeBlock_copy-button:hover {
+   border: 1px solid var(--border-accent);
+   color: white;
+}

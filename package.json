@@ -7,8 +7,7 @@
       "dev": "vite",
       "build": "tsc && vite build",
       "build:app": "tsc && vite build --mode app",
-      "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-      "preview": "vite preview"
+      "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
    },
    "dependencies": {
       "react": "^18.2.0",
@@ -16,6 +15,7 @@
    },
    "devDependencies": {
       "@rollup/plugin-terser": "^0.4.3",
+      "@types/prismjs": "^1.26.0",
       "@types/react": "^18.0.37",
       "@types/react-dom": "^18.0.11",
       "@typescript-eslint/eslint-plugin": "^5.59.0",
@@ -24,6 +24,7 @@
       "eslint": "^8.38.0",
       "eslint-plugin-react-hooks": "^4.6.0",
       "eslint-plugin-react-refresh": "^0.3.4",
+      "prismjs": "^1.29.0",
       "typescript": "^5.0.2",
       "vite": "^4.3.9"
    }
