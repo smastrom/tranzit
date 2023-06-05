@@ -8,10 +8,15 @@ import {
    cloneElement,
    Children,
    useEffect,
-   useLayoutEffect,
    type ReactElement
 } from 'react'
-import { createAnimation, useOnBeforeFirstPaint, mergeTransform, defaultProps } from './utils'
+import {
+   useIsomorphicLayoutEffect,
+   createAnimation,
+   useOnBeforeFirstPaint,
+   mergeTransform,
+   defaultProps
+} from './utils'
 import type { InternalProps, Props, MutableRef, ReactHTML } from './types'
 
 export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | null {
@@ -72,7 +77,7 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
       }
    })
 
-   useLayoutEffect(() => {
+   useIsomorphicLayoutEffect(() => {
       if (isInitialized && props.when && !internalRef.current) {
          setIsDestroyed(false)
       }

@@ -1,5 +1,8 @@
-import { useCallback, useLayoutEffect, useRef, type RefObject } from 'react'
+import { useCallback, useLayoutEffect, useRef, type RefObject, useEffect } from 'react'
 import type { InternalProps, Props, AnimationRef } from './types'
+
+export const useIsomorphicLayoutEffect =
+   typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 export function createAnimation(
    ref: RefObject<HTMLElement> = { current: null },
@@ -13,7 +16,7 @@ export function useOnBeforeFirstPaint(fn: () => void) {
    const isMounted = useRef(false)
    const callback = useCallback(fn, [fn])
 
-   useLayoutEffect(() => {
+   useIsomorphicLayoutEffect(() => {
       if (!isMounted.current) {
          callback()
       }
@@ -24,7 +27,7 @@ export function useOnBeforeFirstPaint(fn: () => void) {
 }
 
 export function mergeTranslate(x: number, y: number, transform: string) {
-   if ((x === 0 && y === 0) || !transform) return transform
+   if (x === 0 && y === 0) return transform
 
    const tN = `translate(${x}px, ${y}px)`
    const t3d = `translate3d(${x}px, ${y}px, 0)`
@@ -42,7 +45,7 @@ export function mergeTranslate(x: number, y: number, transform: string) {
       ? transform.replace(/translateX\([^)]+\)/, tY)
       : `${transform} ${tY}`
 
-   return transform
+   return `${transform} ${t3d}`
 }
 
 export function mergeTransform(keyframes: AnimationRef['keyframes'], x: number, y: number) {

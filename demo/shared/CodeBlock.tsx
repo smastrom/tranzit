@@ -49,7 +49,7 @@ export function MyComponent() {
                        }`
                      : ''
                }${duration !== 'Component Default' ? ` durIn={${duration}}` : ''}>
-         <div style={{ width: 100, height: 100, background: 'purple' }} />
+       <div style={{ width: 100, height: 100, background: 'purple' }} />
      </${lastPlayed}>
     </>
   )

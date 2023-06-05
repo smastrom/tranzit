@@ -28,7 +28,7 @@ For anything more complex use a library like [Framer Motion](https://www.framer.
 
 ## Usage
 
-Each Tranzit component is a transition that you can import:
+Each transition is a component that you can import:
 
 ```js
 import {
@@ -58,7 +58,7 @@ No configuration needed besides passing a falsy/truthy value to `when`:
 </Fade>
 ```
 
-The component must have a **single child** and it must be a React component/element (no fragments nor primitives).
+The component must have a **single child** and it must be a React component/element (no fragments).
 
 ### Customization
 
