@@ -1,4 +1,5 @@
 import { Tranzit } from './Tranzit'
+
 import type { Props } from './types'
 
 export { Tranzit } from './Tranzit'
@@ -249,10 +250,10 @@ export function Vibrate(props: Props) {
             opacity: [0, 1],
             transform: [
                'translate(0)',
-               'translate(-2px, 2px)',
-               'translate(-2px, -2px)',
-               'translate(2px, 2px)',
-               'translate(2px, -2px)',
+               'translate(-4px, 4px)',
+               'translate(-4px, -4px)',
+               'translate(4px, 4px)',
+               'translate(4px, -4px)',
                'translate(0)'
             ]
          }}

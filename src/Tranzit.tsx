@@ -22,16 +22,16 @@ import type { InternalProps, Props, MutableRef, ReactHTML } from './types'
 export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | null {
    const props = { ...defaultProps, ...tranzitProps }
 
-   const prevWhen = useDeferredValue(props.when)
-
    const internalRef = useRef<HTMLDivElement>(null)
    const animation = useRef(createAnimation())
    const userStyles = useRef({
       display: '',
       visibility: '',
-      hasInlineDisplay: false,
-      hasInlineVisibility: false
+      hasDisplay: false,
+      hasVisibility: false
    })
+
+   const prevWhen = useDeferredValue(props.when)
 
    const [isDestroyed, setIsDestroyed] = useState(false)
 
@@ -39,6 +39,8 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
       () => mergeTransform(props.keyframes, props.startX, props.startY),
       [props.keyframes, props.startX, props.startY]
    )
+
+   const keyframeOptions = useMemo(() => props.keyframeOptions, [props.keyframeOptions])
 
    const reset = useCallback(() => {
       if (!internalRef.current) return
@@ -57,8 +59,8 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
       userStyles.current = {
          display: styles.getPropertyValue('display'),
          visibility: styles.getPropertyValue('visibility'),
-         hasInlineDisplay: internalRef.current.style.display !== '',
-         hasInlineVisibility: internalRef.current.style.visibility !== ''
+         hasDisplay: !!internalRef.current.style.display,
+         hasVisibility: !!internalRef.current.style.visibility
       }
 
       if (props.when) {
@@ -84,24 +86,21 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
    }, [isInitialized, props.when])
 
    useEffect(() => {
+      if (!internalRef.current) return
       if (isDestroyed) return
       if (prevWhen === props.when) return
-      if (!internalRef.current) return
+
       if (isInitialized) {
          if (props.when) {
             animation.current.onfinish = null
 
-            if (props.keep) {
-               internalRef.current.style.visibility = userStyles.current.hasInlineDisplay
-                  ? userStyles.current.visibility
-                  : ''
-            }
+            internalRef.current.style.visibility = userStyles.current.hasDisplay
+               ? userStyles.current.visibility
+               : ''
 
-            if (props.hide) {
-               internalRef.current.style.display = userStyles.current.hasInlineVisibility
-                  ? userStyles.current.display
-                  : ''
-            }
+            internalRef.current.style.display = userStyles.current.hasVisibility
+               ? userStyles.current.display
+               : ''
 
             if (animation.current.playState === 'running') {
                if (props.reverse) {
@@ -114,7 +113,7 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
                duration: props.durIn,
                delay: props.delayIn,
                composite: 'replace',
-               ...props.keyframeOptions
+               ...keyframeOptions
             })
             animation.current.play()
          } else {
@@ -130,7 +129,7 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
                   duration: props.durOut,
                   delay: props.delayOut,
                   composite: 'replace',
-                  ...props.keyframeOptions,
+                  ...keyframeOptions,
                   direction: props.reverse ? 'reverse' : 'normal'
                }
             )
@@ -145,7 +144,7 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
       reset,
       prevWhen,
       keyframes,
-      props.keyframeOptions,
+      keyframeOptions,
       props.when,
       props.durIn,
       props.durOut,
@@ -155,8 +154,6 @@ export function Tranzit(tranzitProps: InternalProps & Props): ReactElement | nul
       props.hide,
       props.keep
    ])
-
-   // console.count('Render count')
 
    return isDestroyed
       ? null
