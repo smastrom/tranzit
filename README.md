@@ -1,5 +1,9 @@
 # Tranzit
 
+### :warning: **This is a work in progress.**
+
+<br />
+
 1KB dead simple library to conditionally animate React components using performant [Web Animations API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API).
 
 [Live Demo](https://trazit.netlify.app) - Real world examples: [Menu]() - [Modal]() - [Intersection Observer]()
